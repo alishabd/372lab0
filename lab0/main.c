@@ -22,7 +22,9 @@ typedef enum stateTypeEnum{
 } stateType;
 
 //TODO: Use volatile variables that change within interrupts
-
+volatile stateType state = wait;
+volatile int currentstate = 0;
+        
 int main() {
     
     //This function is necessary to use interrupts. 
@@ -34,21 +36,111 @@ int main() {
     initTimer2();
     initTimer1();
     
-    while(1){
-/*
-        //TODO9: Implement a state machine to create the desired functionality
+     while(1){
+          //TODO9: Implement a state machine to create the desired functionality
         switch(state){
-            case led_on:
-                // TUrn the LED ON
-                LATDbits.LATDO = 1;
-            case led_off:
-                //TUrn the LED OFF
-                
+            case wait:
+                if(currentstate == 0)
+                {
+                  turnOnLED(1);
+                  currentstate = 1;
+                }
+                if(PORTDbits.RD6 == 0)
+                {
+                    state =  debouncePress;
+                }
+                else 
+                {
+                    state = wait;
+                }  
+                break;
             
-        }
- */
-    }
+            case debouncePress:
+                T1CONbits.TON = 1; //Turn the timer on 
+                delayMs(200);//delay for 200ms
+                state = wait2;
+                break;
+               
+            case wait2:
+                if(PORTDbits.RD6 == 1)//if button is released
+                {
+                state = debounceRelease;//go to state debounce release
+                }
+                else 
+                    state = wait2;     
+                break;
+               
+            case debounceRelease:
+                T1CONbits.TON = 0;//turn off the timer
+                TMR1 = 0;//clear the timer
+                if(currentstate == 1)//check if the current state is 1
+                {
+                //Turn the LED2 
+                currentstate = 2;//set the state to 2
+                state = led2;//go to led2 state
+                }
+                else if(currentstate == 2)
+                {
+                //Turn on LED3
+                currentstate = 3;
+                state = led3;
+                }
+                else 
+                {
+                //Turn on LED1
+                currentstate = 1;
+                state = led1;
+                }
+                break;
     
-    return 0;
+            case debounceRelease2:
+                T1CONbits.TON = 0;//turn off the timer
+                TMR1 = 0;//clear the timer
+                if(currentstate == 1)
+                {
+                //Turn the LED3 
+                currentstate = 3;//set the state to 3          
+                state = led3;
+                }
+                else if(currentstate == 2)
+                {
+                //Turn on LED1
+                currentstate = 1;
+                state = led1;
+                }
+                else 
+                {  
+                //Turn on LED2
+                currentstate = 2;
+                state = led2;
+                }
+                break;
+                
+            case led1:
+                turnOnLED(1);
+                state =  wait;
+                break;
+              
+            case led2:
+                turnOnLED(2);
+                state = wait;
+                break;
+                
+            case led3:
+                turnOnLED(3);
+                state = wait;
+                break;
+        }
+    } 
+       return 0;
 }
 
+   void __ISR(_TIMER_1_VECTOR, IPL3SRS) _T1Interrupt(){
+    IFS0bits.T1IF = 0;//put the flag down
+    if(PORTDbits.RD6 == 1)//if button is released
+    {
+    state = debounceRelease2; 
+    }
+   }
+   
+ 

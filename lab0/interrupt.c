@@ -6,6 +6,7 @@
  */
 
 #include <xc.h>
+#include "interrupt.h"
 
 void enableInterrupts(){
     unsigned int val;
