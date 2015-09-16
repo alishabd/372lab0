@@ -15,6 +15,8 @@
 
 #define OUTPUT 0
 #define INPUT 1
+#define button PORTDbits.RD6
+
 
 //TODO: Define states of the state machine
 typedef enum stateTypeEnum{
@@ -46,31 +48,27 @@ int main() {
                   turnOnLED(1);
                   currentstate = 1;
                 }
-                if(PORTDbits.RD6 == 0)
+                if(button == 0)
                 {
                     T1CONbits.TON = 0;//turn off the timer
                     TMR1 = 0;//clear the timer
                     sec=0;
                     state =  debouncePress;
-                }
-                //else 
-               // {
-                    //state = wait;
-                //}  
+                } 
                 break;
             
             case debouncePress:
-                delayMs(100);//delay for 200ms
-                T1CONbits.TON = 1;
+                delayMs(100);//delay for 100ms
+                T1CONbits.TON = 1;//turn on the timer
                 state = wait2;
                 break;
                
             case wait2:
-                while(PORTDbits.RD6==0)
+                while(button ==0)
                 {
                     state=wait2;
                 }
-                if(PORTDbits.RD6 == 1)//if button is released
+                if(button == 1)//if button is released
                 {
                 T1CONbits.TON = 0;//turn off the timer
                 if(sec < 2)
