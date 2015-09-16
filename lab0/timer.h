@@ -11,7 +11,7 @@
 
 void initTimer1();
 void initTimer2();
-void delayMs(int delay);
+void delayMs(unsigned int delay);
 
 #endif	/* TIMER_H */
 

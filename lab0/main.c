@@ -24,6 +24,7 @@ typedef enum stateTypeEnum{
 //TODO: Use volatile variables that change within interrupts
 volatile stateType state = wait;
 volatile int currentstate = 0;
+volatile int sec = 0;
         
 int main() {
     
@@ -47,32 +48,42 @@ int main() {
                 }
                 if(PORTDbits.RD6 == 0)
                 {
+                    T1CONbits.TON = 0;//turn off the timer
+                    TMR1 = 0;//clear the timer
+                    sec=0;
                     state =  debouncePress;
                 }
-                else 
-                {
-                    state = wait;
-                }  
+                //else 
+               // {
+                    //state = wait;
+                //}  
                 break;
             
             case debouncePress:
-                T1CONbits.TON = 1; //Turn the timer on 
-                delayMs(200);//delay for 200ms
+                delayMs(100);//delay for 200ms
+                T1CONbits.TON = 1;
                 state = wait2;
                 break;
                
             case wait2:
+                while(PORTDbits.RD6==0)
+                {
+                    state=wait2;
+                }
                 if(PORTDbits.RD6 == 1)//if button is released
+                {
+                T1CONbits.TON = 0;//turn off the timer
+                if(sec < 2)
                 {
                 state = debounceRelease;//go to state debounce release
                 }
-                else 
-                    state = wait2;     
+                else
+                    state = debounceRelease2;
+                }   
                 break;
                
             case debounceRelease:
-                T1CONbits.TON = 0;//turn off the timer
-                TMR1 = 0;//clear the timer
+                delayMs(100);
                 if(currentstate == 1)//check if the current state is 1
                 {
                 //Turn the LED2 
@@ -94,8 +105,7 @@ int main() {
                 break;
     
             case debounceRelease2:
-                T1CONbits.TON = 0;//turn off the timer
-                TMR1 = 0;//clear the timer
+                delayMs(100);
                 if(currentstate == 1)
                 {
                 //Turn the LED3 
@@ -137,10 +147,11 @@ int main() {
 
    void __ISR(_TIMER_1_VECTOR, IPL3SRS) _T1Interrupt(){
     IFS0bits.T1IF = 0;//put the flag down
-    if(PORTDbits.RD6 == 1)//if button is released
-    {
-    state = debounceRelease2; 
-    }
+    sec++;
+   }
+   
+   void __ISR(_TIMER_2_VECTOR, IPL4SRS) _T2Interrupt(){
+    IFS0bits.T2IF = 0;//put the flag down
    }
    
  

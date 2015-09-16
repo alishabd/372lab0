@@ -14,6 +14,5 @@
 void initSwitch1(){
     //TODO: Initialize switch 1
     TRISDbits.TRISD6 = INPUT;   // Enable input for switch
-    CNCONDbits.ON = 1;          // Turn on CN device
     CNPUDbits.CNPUD6 = 1;       // Enable Internal Pull-up resistor
 }
